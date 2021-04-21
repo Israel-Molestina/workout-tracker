@@ -1,13 +1,52 @@
 const router = require('express').Router();
-const Workout = require('../models/workout');
+const db = require('../models/');
 
+// route for adding a new workout
 router.post('/api/workouts', ({ body }, res) => {
-  Workout.create(body)
+  db.Workout.create(body)
     .then((dbWorkout) => {
       res.json(dbWorkout);
     })
     .catch((err) => {
+      res / status(400).json(err);
+    });
+});
+
+// route for retrieving workouts and adding the field total duration that is equal to the sum of all durations
+router.get('/api/workouts', (req, res) => {
+  db.Workout.aggregate([
+    {
+      $addFields: {
+        totalDuration: {
+          $sum: '$exercises.duration',
+        },
+      },
+    },
+  ])
+    .then((dbWorkout) => {
+      console.log(dbWorkout);
+      res.json(dbWorkout);
+    })
+    .catch((err) => {
       res.status(400).json(err);
+    });
+});
+
+// route to update excersise
+router.put('/api/workouts/:id', (req, res) => {
+  db.Workout.updateOne(
+    {
+      _id: req.params.id,
+    },
+    {
+      $push: { excersises: req.body },
+    }
+  )
+    .then((dbWorkout) => {
+      res.json(dbWorkout);
+    })
+    .catch((err) => {
+      res.json(err);
     });
 });
 
